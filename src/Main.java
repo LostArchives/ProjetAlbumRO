@@ -228,11 +228,14 @@ public class Main {
 
 	// compute the fitness
 	//System.out.println(eval(solution));
-	
-	for (int i = 0 ; i<1000;i++) 
+	double smallest = 100;
+	for (int i = 0 ; i<100000;i++) 
 	{
-		HillClimberFirst();
+		double min = HillClimberFirst();
+		if (min<smallest)
+			smallest = min;
 	}
+	System.out.println("La plus petite valeur est " + smallest);
 	
 	
 }
@@ -251,11 +254,11 @@ public class Main {
     			permute = randomPermute(solution);
     			actualEvaluation = eval(permute);
     			
-    			if (actualEvaluation > theMaxEvaluation)
+    			if (actualEvaluation < theMaxEvaluation)
     				break;
     		}
     		
-    		if (actualEvaluation > theMaxEvaluation) {
+    		if (actualEvaluation < theMaxEvaluation) {
     			theMaxEvaluation = actualEvaluation;
     			copyToArray(permute,solution);
     		}
