@@ -4,6 +4,7 @@
  *
  */
 import java.io.*;
+import java.util.Random;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -223,15 +224,97 @@ public class Main {
 	// one basic solution : order of the index
 
 	int numberOfPhoto = 55;
-	int [] solution = new int[numberOfPhoto];
-
-	for(int i = 0; i < 55; i++)
-	    solution[i] = i;
+	int [] solution = generateBasicSolution(numberOfPhoto);
 
 	// compute the fitness
-	System.out.println(eval(solution));
-
+	//System.out.println(eval(solution));
+	
+	for (int i = 0 ; i<1000;i++) 
+	{
+		HillClimberFirst();
+	}
+	
+	
+}
+    
+    
+    public static double HillClimberFirst() {
+    	double theMaxEvaluation = 0;
+    	double actualEvaluation = 0;
+    	int[] solution = generateBasicSolution(55);
+    	int[] permute = new int[solution.length];
+    	boolean stop = false;
+    	theMaxEvaluation = eval(solution);
+    	do {
+    		
+    		for (int i = 0 ; i< 55 ;i++) {
+    			permute = randomPermute(solution);
+    			actualEvaluation = eval(permute);
+    			
+    			if (actualEvaluation > theMaxEvaluation)
+    				break;
+    		}
+    		
+    		if (actualEvaluation > theMaxEvaluation) {
+    			theMaxEvaluation = actualEvaluation;
+    			copyToArray(permute,solution);
+    		}
+    		else
+    		{
+    			stop = true;
+    		}
+    	} while(!stop);
+    	
+    	System.out.println("Avec l'ordre "+display(permute)+" on obtient "+theMaxEvaluation);
+    	return theMaxEvaluation;
     }
+    
+    private static int[] randomPermute(int[] basicSolution) {
+    	int[] permute = new int[basicSolution.length];
+    	for (int i = 0 ; i< permute.length;i++) {
+    		permute[i] = basicSolution[i];
+    	}
+    	Random r = new Random();
+    	int  firstRandom = r.nextInt(permute.length - 1);
+    	
+    	int secondRandom = r.nextInt(permute.length-1);
+    	while(firstRandom == secondRandom)
+    		secondRandom = r.nextInt(permute.length - 1);
+    	
+    	
+    	int temp = permute[firstRandom];
+    	permute[firstRandom] = permute[secondRandom];
+    	permute[secondRandom] = temp;
+    	
+    	return permute;
+    	
+    }
+    
+    private static String display(int[] arr) {
+    	String s = "";
+    	for (int i = 0 ;i< arr.length ; i++) {
+    		s+=arr[i]+";";
+    		
+    	}
+    	s+="\n--------";
+    	return s;
+    }
+    
+    private static int[] generateBasicSolution(int size) {
+    	int[] basic = new int[size];
+    	for(int i = 0; i < 55; i++) {
+    	   basic[i] = i;
+        }
+    	return basic;
+    }
+    
+    private static void copyToArray(int[] from,int[] to) {
+    	for (int i = 0 ; i< from.length;i++) {
+    		to[i] = from[i];
+    	}
+    }
+    
+    
 
 
 }
