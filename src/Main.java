@@ -4,6 +4,7 @@
  *
  */
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.json.simple.JSONArray;
@@ -19,7 +20,7 @@ import org.json.simple.parser.ParseException;
 public class Main {
     // Distance between photos
     public static double [][] photoDist;
-
+    public static ArrayList<String> solutions;
     // Inverse of the distance between positions in the album
     public static double [][] albumInvDist;
 
@@ -229,60 +230,73 @@ public class Main {
 	// compute the fitness
 	//System.out.println(eval(solution));
 	double smallest = 100;
+	Random r = new Random();
+	int bestIteration = 0;
+	solutions = new ArrayList<String>();
 	for (int i = 0 ; i<100000;i++) 
 	{
-		double min = HillClimberFirst();
-		if (min<smallest)
+		double min = HillClimberFirst(r);
+		if (min<smallest) {
 			smallest = min;
+			bestIteration = i;
+		}
+			
 	}
-	System.out.println("La plus petite valeur est " + smallest);
+	System.out.println("La plus petite valeur est " + smallest + " obtenue avec \n"+solutions.get(bestIteration));
 	
 	
 }
     
     
-    public static double HillClimberFirst() {
-    	double theMaxEvaluation = 0;
+    public static double HillClimberFirst(Random permuter) {
+    	double theMinEvaluation = 0;
     	double actualEvaluation = 0;
     	int[] solution = generateBasicSolution(55);
     	int[] permute = new int[solution.length];
     	boolean stop = false;
-    	theMaxEvaluation = eval(solution);
+    	int cnt = 0;
+    	
+    	theMinEvaluation = eval(solution);
     	do {
     		
     		for (int i = 0 ; i< 55 ;i++) {
-    			permute = randomPermute(solution);
+    			permute = randomPermute(permuter,solution);
     			actualEvaluation = eval(permute);
     			
-    			if (actualEvaluation < theMaxEvaluation)
+    			if (actualEvaluation < theMinEvaluation) {
+    				cnt+=i;
     				break;
+    			}
+    				
     		}
     		
-    		if (actualEvaluation < theMaxEvaluation) {
-    			theMaxEvaluation = actualEvaluation;
+    		if (actualEvaluation < theMinEvaluation) {
+    			theMinEvaluation = actualEvaluation;
     			copyToArray(permute,solution);
     		}
     		else
     		{
     			stop = true;
     		}
+    		
     	} while(!stop);
     	
-    	System.out.println("Avec l'ordre "+display(permute)+" on obtient "+theMaxEvaluation);
-    	return theMaxEvaluation;
+    	System.out.println("Avec l'ordre "+display(permute)+" on obtient "+theMinEvaluation + " en "+ (cnt+1)+ " itérations");
+    	solutions.add(display(permute));
+    	return theMinEvaluation;
     }
     
-    private static int[] randomPermute(int[] basicSolution) {
+    private static int[] randomPermute(Random r,int[] basicSolution) {
     	int[] permute = new int[basicSolution.length];
     	for (int i = 0 ; i< permute.length;i++) {
     		permute[i] = basicSolution[i];
     	}
-    	Random r = new Random();
-    	int  firstRandom = r.nextInt(permute.length - 1);
     	
-    	int secondRandom = r.nextInt(permute.length-1);
+    	int  firstRandom = r.nextInt(permute.length);
+    	
+    	int secondRandom = r.nextInt(permute.length);
     	while(firstRandom == secondRandom)
-    		secondRandom = r.nextInt(permute.length - 1);
+    		secondRandom = r.nextInt(permute.length);
     	
     	
     	int temp = permute[firstRandom];
@@ -296,7 +310,7 @@ public class Main {
     private static String display(int[] arr) {
     	String s = "";
     	for (int i = 0 ;i< arr.length ; i++) {
-    		s+=arr[i]+";";
+    		s+=arr[i]+" ";
     		
     	}
     	s+="\n--------";
@@ -305,7 +319,7 @@ public class Main {
     
     private static int[] generateBasicSolution(int size) {
     	int[] basic = new int[size];
-    	for(int i = 0; i < 55; i++) {
+    	for(int i = 0; i < size; i++) {
     	   basic[i] = i;
         }
     	return basic;
