@@ -24,6 +24,7 @@ public class Main {
     // Inverse of the distance between positions in the album
     public static double [][] albumInvDist;
 
+    public static ArrayList<String> tempSolution;
     /**
      *
      * Example of json file parsing
@@ -233,7 +234,7 @@ public class Main {
 	Random r = new Random();
 	int bestIteration = 0;
 	solutions = new ArrayList<String>();
-	for (int i = 0 ; i<100000;i++) 
+	for (int i = 0 ; i<10000;i++) 
 	{
 		double min = HillClimberFirst(r);
 		if (min<smallest) {
@@ -283,7 +284,16 @@ public class Main {
     	
     	System.out.println("Avec l'ordre "+display(permute)+" on obtient "+theMinEvaluation + " en "+ (cnt+1)+ " itérations");
     	solutions.add(display(permute));
+    	tempSolution = solutions;
     	return theMinEvaluation;
+    }
+    
+    public static double IteratedLocalSearch(Random permuter) {
+    	
+    	double solution = 0;
+    	
+    	
+    	return solution;
     }
     
     private static int[] randomPermute(Random r,int[] basicSolution) {
