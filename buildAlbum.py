@@ -128,7 +128,7 @@ if __name__ == '__main__':
     album_name     = "data\info-album.json"        # file name of the album information
     photos_name    = "data\info-photo.json"        # file name of the photo information
     html_dir       = "html"                        # path to html source files
-    photos_dir     = "html/img"                    # path to images from the html directory
+    photos_dir     = "img"                    		# path to images from the html directory
     solution_name  = "data\chronologic-order.sol"  # (default) file name of the solution which gives the assignement of the photos
 
     if len(sys.argv) > 1:

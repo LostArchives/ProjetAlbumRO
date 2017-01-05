@@ -12,14 +12,31 @@ import org.json.simple.parser.ParseException;
 
 public class AlbumPhoto {
 
-	private String _albumFileName; // Path of the Json file storing album informations
-	private String _photoFileName; // Path of the Json file storing photos informations
-	private int _nbPhotos; // Number of photos in the album
+	// Path of the Json file storing album informations
+	private String _albumFileName; 
 	
-	// Distance between photos
-    public double [][] photoDist;
-    // Inverse of the distance between positions in the album
-    public double [][] albumInvDist;
+	// Path of the Json file storing photos informations
+	private String _photoFileName; 
+	
+	// Number of photos in the album
+	private int _nbPhotos; 
+	
+	// Hash Distances between photos and album
+    private double [][] photosDistHash;
+    private double [][] albumInvDistHash;
+    
+    // Tags values distances between photos
+    private double[][] photosDistComTags;
+    private double[][] photosDistUncomTags;
+    private double[][] photosDistUncomNbTags;
+    
+    //Colors distances between photos
+    private double[][] photosDistColors;
+    
+    //Grey AVG distances between photos
+    private double[][] photosDistGreyAVG;
+    
+    
 	
 	public AlbumPhoto(String albumfilename,String photofilename,int nbPhotos) {
 		
@@ -51,6 +68,46 @@ public class AlbumPhoto {
 
 	public void setNbPhotos(int _nbPhotos) {
 		this._nbPhotos = _nbPhotos;
+	}
+
+	public String get_albumFileName() {
+		return _albumFileName;
+	}
+
+	public String get_photoFileName() {
+		return _photoFileName;
+	}
+
+	public int get_nbPhotos() {
+		return _nbPhotos;
+	}
+
+	public double[][] getPhotosDistHash() {
+		return photosDistHash;
+	}
+
+	public double[][] getAlbumInvDistHash() {
+		return albumInvDistHash;
+	}
+
+	public double[][] getPhotosDistComTags() {
+		return photosDistComTags;
+	}
+
+	public double[][] getPhotosDistUncomTags() {
+		return photosDistUncomTags;
+	}
+
+	public double[][] getPhotosDistUncomNbTags() {
+		return photosDistUncomNbTags;
+	}
+
+	public double[][] getPhotosDistColors() {
+		return photosDistColors;
+	}
+
+	public double[][] getPhotosDistGreyAVG() {
+		return photosDistGreyAVG;
 	}
 
 	/**
@@ -104,7 +161,7 @@ public class AlbumPhoto {
     *                  and of inverse distance between positions 
     */
    public void computeDistances() {
-	computePhotoDistances();
+	computePhotoHashes();
 	computeAlbumDistances();
    }
 
@@ -132,12 +189,12 @@ public class AlbumPhoto {
 	    for(int i = 0; i < pageSize.size(); i++) 
 		nbPhoto += (int) (long) pageSize.get(i);
 
-	    albumInvDist = new double[nbPhoto][nbPhoto];
+	    albumInvDistHash = new double[nbPhoto][nbPhoto];
 
 	    // compute the distance
 	    for(int i = 0; i < nbPhoto; i++) 
 		for(int j = 0; j < nbPhoto; j++) 
-		    albumInvDist[i][j] = inverseDistance(size, i, j);
+		    albumInvDistHash[i][j] = inverseDistance(size, i, j);
 	    
 	    /*
 	    for(int i = 0; i < albumDist.length; i++) {
@@ -184,7 +241,7 @@ public class AlbumPhoto {
 	
    }
 
-   public void computePhotoDistances() {
+   public void computePhotoHashes() {
 	   
 	   
 	try {
@@ -196,14 +253,14 @@ public class AlbumPhoto {
 
 	    JSONArray array = (JSONArray) obj;
 
-	    photoDist = new double[array.size()][array.size()];
+	    photosDistHash = new double[array.size()][array.size()];
 
 	    // distance based on the distance between average hash
 	    for(int i = 0; i < array.size(); i++) {
 		JSONObject image = (JSONObject) array.get(i);
 		JSONArray d = (JSONArray) image.get("ahashdist");		
 		for(int j = 0; j < d.size(); j++) {
-		    photoDist[i][j] = (double) d.get(j);
+		    photosDistHash[i][j] = (double) d.get(j);
 		}
 	    }
 
@@ -229,8 +286,216 @@ public class AlbumPhoto {
 	
    }
    
-   
+   /**
+    * Method to affect all values related to tags in 2D double arrays -> 1 for every tags categories (common,uncommon....)
+    */
+   public void computePhotosTags() {
+	   
+	   try {
+		    FileReader reader = new FileReader(_photoFileName);
 
+		    JSONParser parser = new JSONParser();
+
+		    Object obj = parser.parse(reader);
+
+		    JSONArray array = (JSONArray) obj;
+		    
+		   JSONArray temp = (JSONArray)((JSONObject)((JSONObject)array.get(0)).get("tags")).get("classes");
+		   
+		   int nbTags = temp.size();
+		   
+		   double[][] tagsValues = new double[array.size()][nbTags];
+		   String[][] tagsNames = new String[array.size()][nbTags];
+
+		    photosDistComTags = new double[array.size()][array.size()];
+		    photosDistUncomTags = new double[array.size()][array.size()];
+		    photosDistUncomNbTags = new double[array.size()][array.size()];
+
+		    // distance based on the distance between average Tags
+		    for(int i = 0; i < array.size(); i++) {
+			JSONArray allTags = (JSONArray)((JSONObject)((JSONObject) array.get(i)).get("tags")).get("classes");
+			JSONArray allProbs = (JSONArray)((JSONObject)((JSONObject) array.get(i)).get("tags")).get("probs");
+			
+			for(int j = 0; j < nbTags; j++) {
+				tagsValues[i][j] = Double.parseDouble(allProbs.get(j).toString());
+			    tagsNames[i][j] = allTags.get(j).toString();
+			    
+			}
+		    }
+
+		    
+		    for (int i = 0 ; i < array.size();i++) {
+		    	
+		    	
+		    	for (int j = 0 ; j < array.size(); j++) {
+		    		
+		    		double unComSum = 0.0;
+		    		int nbComTag = 0;
+		    		double comSum = 0.0;
+		    		
+		    		for (int k = 0 ; k < nbTags ; k++) {
+		    			
+		    			for (int l = 0 ; l < nbTags;l++) {
+		    				
+		    				
+		    				
+		    				if (!tagsNames[i][l].equals(tagsNames[j][k])) {
+		    					
+		    					unComSum += Math.abs(tagsValues[i][l] - tagsValues[j][k]);
+		    					
+		    					comSum += 0.2;
+		    				}
+		    				else
+		    				{
+		    					unComSum -=0.2;
+		    					comSum -= Math.abs(tagsValues[i][l] - tagsValues[j][k]);
+		    					nbComTag += 1; 
+		    				}
+		    			}
+		    		}
+		    		
+		    		
+		    		photosDistUncomTags[i][j] = unComSum;
+		    		photosDistUncomNbTags[i][j] = nbTags - nbComTag;
+		    		if (nbComTag > 0 ) {
+		    			photosDistComTags[i][j] = comSum / nbComTag;
+		    			
+		    		}
+		    		
+		    		
+		    	}
+		    	
+		    }
+		    
+
+
+		} catch(ParseException pe) {	    
+		    System.out.println("position: " + pe.getPosition());
+		    System.out.println(pe);
+		} catch (FileNotFoundException ex) {
+		    ex.printStackTrace();
+		} catch(IOException ex) {
+		    ex.printStackTrace();
+		}
+	   
+	   
+   }
+   
+   /**
+    * Method to affect colors values from the json file to a 2D double array
+    */
+   public void computePhotosColors() {
+	   
+	   try {
+		    FileReader reader = new FileReader(_photoFileName);
+
+		    JSONParser parser = new JSONParser();
+
+		    Object obj = parser.parse(reader);
+
+		    JSONArray array = (JSONArray) obj;
+
+		    photosDistColors = new double[array.size()][array.size()];
+		    
+		    int[][] photoColorFirst = new int[array.size()][3]; // RGB = 3 values between 0 and 255
+		    int[][] photoColorSecond = new int[array.size()][3]; // RGB = 3 values between 0 and 255
+
+		    // distance based on the distance between average Colors
+		    for(int i = 0; i < array.size(); i++) {
+		    
+		    	JSONObject image = (JSONObject) array.get(i);
+		    	photoColorFirst[i][0] = Integer.parseInt(((JSONObject)image.get("color1")).get("r").toString());
+		    	photoColorFirst[i][1] = Integer.parseInt(((JSONObject)image.get("color1")).get("b").toString());
+		    	photoColorFirst[i][2] = Integer.parseInt(((JSONObject)image.get("color1")).get("g").toString());
+		    	
+		    	photoColorSecond[i][0] = Integer.parseInt(((JSONObject)image.get("color2")).get("r").toString());
+		    	photoColorSecond[i][0] = Integer.parseInt(((JSONObject)image.get("color2")).get("r").toString());
+		    	photoColorSecond[i][0] = Integer.parseInt(((JSONObject)image.get("color2")).get("r").toString());
+		    	
+		    }
+
+		    
+		    for(int i = 0; i < array.size(); i++) {
+		    	
+			for(int j = 0; j < array.size(); j++) {
+				
+			    double distance1 = Math.sqrt((photoColorFirst[i][0] - photoColorFirst[j][0])*(photoColorFirst[i][0] - photoColorFirst[j][0]))
+			    					+ (photoColorFirst[i][1] - photoColorFirst[j][1]) * (photoColorFirst[i][1] - photoColorFirst[j][1])
+			    					+ (photoColorFirst[i][2] - photoColorFirst[j][2]) * (photoColorFirst[i][2] - photoColorFirst[j][2]);
+			    
+			    double distance2 = Math.sqrt((photoColorSecond[i][0] - photoColorSecond[j][0])*(photoColorSecond[i][0] - photoColorSecond[j][0]))
+    					+ (photoColorSecond[i][1] - photoColorSecond[j][1]) * (photoColorSecond[i][1] - photoColorSecond[j][1])
+    					+ (photoColorSecond[i][2] - photoColorSecond[j][2]) * (photoColorSecond[i][2] - photoColorSecond[j][2]);
+			    
+			    photosDistColors[i][j] = distance1 + distance2;
+			    
+			}
+			
+		
+			
+		    }
+		    
+
+
+		} catch(ParseException pe) {	    
+		    System.out.println("position: " + pe.getPosition());
+		    System.out.println(pe);
+		} catch (FileNotFoundException ex) {
+		    ex.printStackTrace();
+		} catch(IOException ex) {
+		    ex.printStackTrace();
+		}
+	   
+	   
+   }
+   
+   /**
+    * Method to affect GreyAVG from the Json file to a 2D double array
+    */
+   public void computePhotosGreyAVG() {
+	   
+	   try {
+		    FileReader reader = new FileReader(_photoFileName);
+
+		    JSONParser parser = new JSONParser();
+
+		    Object obj = parser.parse(reader);
+
+		    JSONArray array = (JSONArray) obj;
+
+		    int[] photoGreyAVG = new int[array.size()];
+		    
+		    photosDistGreyAVG = new double[array.size()][array.size()];
+
+		    // distance based on the distance between Grey AVG
+		    for(int i = 0; i < array.size(); i++) {
+		    	
+			JSONObject image = (JSONObject) array.get(i);
+			photoGreyAVG[i] = Integer.parseInt(image.get("greyavg").toString());
+				
+		    }
+
+		    
+		    for(int i = 0; i < array.size(); i++) {
+			for(int j = 0; j < array.size(); j++) {
+			    photosDistGreyAVG[i][j] = Math.abs(photoGreyAVG[i] - photoGreyAVG[j]);
+			}
+			
+		    }
+		    
+
+
+		} catch(ParseException pe) {	    
+		    System.out.println("position: " + pe.getPosition());
+		    System.out.println(pe);
+		} catch (FileNotFoundException ex) {
+		    ex.printStackTrace();
+		} catch(IOException ex) {
+		    ex.printStackTrace();
+		}
+	   
+   }
+   
    /**
     * Un exemple de fonction objectif (à minimiser):
     *   distance entre les photos pondérées par l'inverse des distances spatiales sur l'album
@@ -240,14 +505,62 @@ public class AlbumPhoto {
     *      pas de prise en compte d'un effet de page (harmonie/cohérence de la page)
     *      par le choix de distance, pas d'intéraction entre les photos sur des différentes pages
     */
-   public double eval(int [] solution) {
+   private double baseEval(double[][] computed,int[] solution) {
+	   
+	   double sum = 0;
+	   
+	   for(int i = 0; i < albumInvDistHash.length; i++) {
+		    for(int j = i + 1; j < albumInvDistHash.length; j++) {
+			sum += computed[ solution[i] ][ solution[j] ] * albumInvDistHash[i][j] ;
+		    }
+		}
+	   return sum;
+	   
+   }
+
+   
+   /**
+    * Function which evluates by taking the computed array matching with the criteria and a solution
+    * @param criteria Criteria (HASH,etc...) used in the algorithm to produce an optimized album order
+    * @param solution A solution produced by the algorithm (with permutation at every run)
+    * @return The sum based on this criteria
+    */
+   public double eval(AlbumCriteria criteria,int [] solution) {
+	   
 	double sum = 0;
 
-	for(int i = 0; i < albumInvDist.length; i++) {
-	    for(int j = i + 1; j < albumInvDist.length; j++) {
-		sum += photoDist[ solution[i] ][ solution[j] ] * albumInvDist[i][j] ;
-	    }
+	switch(criteria) {
+		
+	case HASH:
+		sum = baseEval(photosDistHash,solution);
+		break;
+		
+	case COLORS:
+		sum = baseEval(photosDistColors,solution);
+		break;
+		
+	case GREY_AVG:
+		sum = baseEval(photosDistGreyAVG,solution);
+		break;
+		
+	case COMMON_TAGS:
+		sum = baseEval(photosDistComTags,solution);
+		break;
+		
+	case UNCOMMON_TAGS:
+		sum = baseEval(photosDistUncomTags,solution);
+		break;
+		
+	case NB_UNCOMMON_TAGS:
+		sum = baseEval(photosDistUncomNbTags,solution);
+		break;
+		
+	default:
+		break;
+		
+	
 	}
+	
 
 	return sum;
    }
