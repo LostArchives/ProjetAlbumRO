@@ -10,6 +10,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+/**
+ * Class corresponding to an albumPhoto with its attributes like json data file and array to store specific data values
+ * @author Valentin
+ *
+ */
 public class AlbumPhoto {
 
 	// Path of the Json file storing album informations
@@ -24,6 +29,13 @@ public class AlbumPhoto {
 	// Hash Distances between photos and album
     private double [][] photosDistHash;
     private double [][] albumInvDistHash;
+    
+    //PhashDist between photos
+    private double [][] photosDistPhash;
+    
+    //DHashDist between photos
+    private double [][] photosDistDhash;
+    
     
     // Tags values distances between photos
     private double[][] photosDistComTags;
@@ -108,6 +120,14 @@ public class AlbumPhoto {
 
 	public double[][] getPhotosDistGreyAVG() {
 		return photosDistGreyAVG;
+	}
+
+	public double[][] getPhotosDistPhash() {
+		return photosDistPhash;
+	}
+
+	public double[][] getPhotosDistDhash() {
+		return photosDistDhash;
 	}
 
 	/**
@@ -287,6 +307,102 @@ public class AlbumPhoto {
    }
    
    /**
+    * Method to affect all values related to DHash distances between photos
+    */
+   public void computePhotoDhashes() {
+	   
+	   
+		try {
+		    FileReader reader = new FileReader(_photoFileName);
+
+		    JSONParser parser = new JSONParser();
+
+		    Object obj = parser.parse(reader);
+
+		    JSONArray array = (JSONArray) obj;
+
+		    photosDistDhash = new double[array.size()][array.size()];
+
+		    // distance based on the distance between average hash
+		    for(int i = 0; i < array.size(); i++) {
+			JSONObject image = (JSONObject) array.get(i);
+			JSONArray d = (JSONArray) image.get("dhashdist");		
+			for(int j = 0; j < d.size(); j++) {
+			    photosDistDhash[i][j] = (double) d.get(j);
+			}
+		    }
+
+		    /*
+		    for(int i = 0; i < photoDist.length; i++) {
+			for(int j = 0; j < photoDist.length; j++) {
+			    System.out.print(" " + photoDist[i][j]);
+			}
+			System.out.println();
+		    }
+		    */
+
+
+		} catch(ParseException pe) {	    
+		    System.out.println("position: " + pe.getPosition());
+		    System.out.println(pe);
+		} catch (FileNotFoundException ex) {
+		    ex.printStackTrace();
+		} catch(IOException ex) {
+		    ex.printStackTrace();
+		}
+		
+		
+	   }
+   
+   /**
+    * Method to affect all values related to PHash Distance between photos
+    */
+   public void computePhotoPhashes() {
+	   
+	   
+		try {
+		    FileReader reader = new FileReader(_photoFileName);
+
+		    JSONParser parser = new JSONParser();
+
+		    Object obj = parser.parse(reader);
+
+		    JSONArray array = (JSONArray) obj;
+
+		    photosDistPhash = new double[array.size()][array.size()];
+
+		    // distance based on the distance between average hash
+		    for(int i = 0; i < array.size(); i++) {
+			JSONObject image = (JSONObject) array.get(i);
+			JSONArray d = (JSONArray) image.get("phashdist");		
+			for(int j = 0; j < d.size(); j++) {
+			    photosDistPhash[i][j] = (double) d.get(j);
+			}
+		    }
+
+		    /*
+		    for(int i = 0; i < photoDist.length; i++) {
+			for(int j = 0; j < photoDist.length; j++) {
+			    System.out.print(" " + photoDist[i][j]);
+			}
+			System.out.println();
+		    }
+		    */
+
+
+		} catch(ParseException pe) {	    
+		    System.out.println("position: " + pe.getPosition());
+		    System.out.println(pe);
+		} catch (FileNotFoundException ex) {
+		    ex.printStackTrace();
+		} catch(IOException ex) {
+		    ex.printStackTrace();
+		}
+		
+		
+	   }
+   
+   /**
     * Method to affect all values related to tags in 2D double arrays -> 1 for every tags categories (common,uncommon....)
     */
    public void computePhotosTags() {
@@ -316,6 +432,7 @@ public class AlbumPhoto {
 			JSONArray allTags = (JSONArray)((JSONObject)((JSONObject) array.get(i)).get("tags")).get("classes");
 			JSONArray allProbs = (JSONArray)((JSONObject)((JSONObject) array.get(i)).get("tags")).get("probs");
 			
+			// Load tags values and probabilities
 			for(int j = 0; j < nbTags; j++) {
 				tagsValues[i][j] = Double.parseDouble(allProbs.get(j).toString());
 			    tagsNames[i][j] = allTags.get(j).toString();
@@ -324,6 +441,7 @@ public class AlbumPhoto {
 		    }
 
 		    
+		    // Comparison of tags with a penality system
 		    for (int i = 0 ; i < array.size();i++) {
 		    	
 		    	
@@ -338,18 +456,18 @@ public class AlbumPhoto {
 		    			for (int l = 0 ; l < nbTags;l++) {
 		    				
 		    				
-		    				
+		    				// if different tag names
 		    				if (!tagsNames[i][l].equals(tagsNames[j][k])) {
 		    					
 		    					unComSum += Math.abs(tagsValues[i][l] - tagsValues[j][k]);
 		    					
-		    					comSum += 0.2;
+		    					comSum += 0.2; //Penality as tags are different
 		    				}
 		    				else
 		    				{
-		    					unComSum -=0.2;
+		    					unComSum -=0.2; //tags are equal so decrease the penality
 		    					comSum -= Math.abs(tagsValues[i][l] - tagsValues[j][k]);
-		    					nbComTag += 1; 
+		    					nbComTag += 1; //Tags equal so commonTags incremented
 		    				}
 		    			}
 		    		}
@@ -415,6 +533,7 @@ public class AlbumPhoto {
 		    }
 
 		    
+		    // Sum of distances between diferent rgb values of the two colors for every photo
 		    for(int i = 0; i < array.size(); i++) {
 		    	
 			for(int j = 0; j < array.size(); j++) {
@@ -478,7 +597,7 @@ public class AlbumPhoto {
 		    
 		    for(int i = 0; i < array.size(); i++) {
 			for(int j = 0; j < array.size(); j++) {
-			    photosDistGreyAVG[i][j] = Math.abs(photoGreyAVG[i] - photoGreyAVG[j]);
+			    photosDistGreyAVG[i][j] = Math.abs(photoGreyAVG[i] - photoGreyAVG[j]); //Absolute for a better reliability (impossible to know which of i or j index contains the highest value)
 			}
 			
 		    }
@@ -533,6 +652,14 @@ public class AlbumPhoto {
 		
 	case HASH:
 		sum = baseEval(photosDistHash,solution);
+		break;
+		
+	case PHASH:
+		sum = baseEval(photosDistPhash,solution);
+		break;
+		
+	case DHASH:
+		sum = baseEval(photosDistDhash,solution);
 		break;
 		
 	case COLORS:

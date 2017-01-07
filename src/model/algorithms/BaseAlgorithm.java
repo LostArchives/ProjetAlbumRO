@@ -8,10 +8,10 @@ import model.AlbumPhoto;
 
 public abstract class BaseAlgorithm {
 
-	protected AlbumPhoto _albumPhoto;
+	protected AlbumPhoto _albumPhoto; // AlbumPhoto used by the algorithm
 	protected AlbumCriteria _albumCriteria; // Evaluation criteria for the album photo
-	protected int _bestIteration;
-	protected ArrayList<String> _solutions;
+	protected int _bestIteration; //Best ieration to retrieve the bestSolution in the arrayList
+	protected ArrayList<String> _solutions; //All best solutions from every run launched by the singleton  AlgorithManager
 	
 	public BaseAlgorithm(AlbumPhoto albumPhoto,AlbumCriteria criteria) {
 		
@@ -66,19 +66,33 @@ public abstract class BaseAlgorithm {
 
 
 	/**
-	 * Every algorithm can be launched so this method allows all of them to be launched but not necessary the same way (different implementations)
-	 * @param permuter
+	 * Every algorithm can be launched
+	 * so this method allows all of them to be launched
+	 * As an abstract method every children classes has this method but with its own code
+	 * @param permuter Random object external to avoid seed problems
 	 */
 	public abstract void Launch(Random permuter);
 	
 	
-	
+	/**
+	 * Method to affect values into the double array of a criteria 
+	 * ( ex : computePhotoHash loads values into photoDistHashes etc...)
+	 * (The double array of a criteria can be accessed directly with the getCriteriaArray method just below
+	 */
 	public void computeCriteria() {
 		
 		switch(_albumCriteria) {
 		
 		case HASH:
 			_albumPhoto.computePhotoHashes();
+			break;
+			
+		case PHASH:
+			_albumPhoto.computePhotoPhashes();
+			break;
+			
+		case DHASH:
+			_albumPhoto.computePhotoDhashes();
 			break;
 			
 		case COLORS:
@@ -109,7 +123,55 @@ public abstract class BaseAlgorithm {
 		
 	}
 	
+	/**
+	 * Method to get directly the double array containing the values related to the computation of the criteria
+	 * @return the double array containing the values related to the computation of the album criteria attribute
+	 */
+	public double[][] getCriteriaArray() {
+		
+		double[][] arr = null;
+		
+		switch(_albumCriteria) {
+		
+		case HASH:
+			return _albumPhoto.getPhotosDistHash();
+			
+			
+		case PHASH:
+			return _albumPhoto.getPhotosDistPhash();
+			
+		case DHASH:
+			return _albumPhoto.getPhotosDistDhash();
+			
+		case COLORS:
+			return _albumPhoto.getPhotosDistColors();
+			
+		case GREY_AVG:
+			return _albumPhoto.getPhotosDistGreyAVG();
+			
+		case COMMON_TAGS:
+			return _albumPhoto.getPhotosDistComTags();
+			
+		case UNCOMMON_TAGS:
+			return _albumPhoto.getPhotosDistUncomTags();
+			
+		case NB_UNCOMMON_TAGS:
+			return _albumPhoto.getPhotosDistUncomNbTags();
+			
+		case NONE:
+			break;
+		
+		}
+		
+		return arr;
+	}
 	
+	
+	/**
+	 * Method to generate a basic solution (0 to size)
+	 * @param size of the solution to generate
+	 * @return The solution generated
+	 */
 	public int[] generateBasicSolution(int size) {
     	int[] basic = new int[size];
     	for(int i = 0; i < size; i++) {
@@ -118,6 +180,11 @@ public abstract class BaseAlgorithm {
     	return basic;
     }
 	
+	/**
+	 *  Method to generate a random solution ( values from 0 to size randomly placed)
+	 * @param size of the solution to generate
+	 * @return The solution generated
+	 */
 	public int[] generateRandomSolution(int size) {
 		
 		ArrayList<Integer> indexList = new ArrayList<Integer>();
@@ -199,6 +266,11 @@ public abstract class BaseAlgorithm {
     	
 }
 	
+	/**
+	 * Convert method of an int[] array into an arrayList<String> (could be useful :) )
+	 * @param solution int array to convert
+	 * @return converted array into an arrayList
+	 */
 	protected ArrayList<String> convertToArrayList(int[] solution) {
 		
 		ArrayList<String> converted = new ArrayList<String>();
@@ -209,6 +281,11 @@ public abstract class BaseAlgorithm {
 		
 	}
 	
+	/**
+	 * Convert method of an arrayList<String> into an int[] array (could be useful :) )
+	 * @param solution ArrayList to convert
+	 * @return converted arrayList into an int array
+	 */
 	protected int[] convertToIntArray(ArrayList<String> solution) {
 		
 		int[] converted = new int[solution.size()];
@@ -222,8 +299,10 @@ public abstract class BaseAlgorithm {
 	
 	
 	
-
-	
+	/**
+	 * Method to clone a solution to avoid references problems when affecting arrays variables to another
+	 * @return a clone of the value passed as a parameter
+	 */
 	protected ArrayList<String> cloneSolution() {
 		
 		ArrayList<String> clone = new ArrayList<String>();
@@ -233,12 +312,22 @@ public abstract class BaseAlgorithm {
 		return clone;
 	}
     
+	/**
+	 * Copy the array 'from' content to the array called 'to'
+	 * @param from
+	 * @param to
+	 */
     protected void copyToArray(int[] from,int[] to) {
     	for (int i = 0 ; i< from.length;i++) {
     		to[i] = from[i];
     	}
     }
     
+    /**
+     * Create a string to display properly the solution order evaluated  in the console
+     * @param arr Array to display
+     * @return
+     */
     protected String display(int[] arr) {
     	String s = "";
     	for (int i = 0 ;i< arr.length ; i++) {
