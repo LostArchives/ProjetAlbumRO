@@ -25,7 +25,7 @@ Packages :
 		-AlbumPhoto
 		-AlbumCriteria (enum with all possible criteria you can use to evaluate your album)
 		-AlgorithmManager (singleton class able to manage any algorithm children of baseAlgorithm)
-		-FileWriter (class able to create and write files -> used to write solution sole at the end of an algorithm)
+		-FileWriter (class able to create and write files -> used to write solution files at the end of an algorithm)
 		
 	The package models.algorithms with classes related to algorithms :
 		-BaseAlgorithm : an abstract class for any algorithm
@@ -37,16 +37,16 @@ Packages :
 Folders :
 
 
-The data folder contains json files with all the data relative to the album photo
+	The data folder contains json files with all the data relative to the album photo
 
-The results folder contains the different solutions created by your algorithms
+	The results folder contains the different solutions created by your algorithms
 
-The html folder contains the album photo pictures (in the img subfolder) and html files
+	The html folder contains the album photo pictures (in the img subfolder) and html files
 
 
 #Installation
 
-The python script is automatically executed by the java program but you need to have python installed on your machine. You can download it here :
-https://www.python.org/downloads/
+	The python script is automatically executed by the java program but you need to have python installed on your machine. You can download it here :
+	https://www.python.org/downloads/
 
-After that , you just have to copy the project into your Eclipse Workspace and import it
+	After that , you just have to copy the project into your Eclipse Workspace and import it
