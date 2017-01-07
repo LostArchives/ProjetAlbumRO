@@ -23,8 +23,8 @@ Packages :
 	There are three packages :
 		The package models with classes not related to algorithms :
 		-AlbumPhoto
-		-AlbumCriteria (enum with all possible criteria you use to evaluate your album)
-		-AlgorithmManager (singleton class able to manage any angorith children of baseAlgorithm)
+		-AlbumCriteria (enum with all possible criteria you can use to evaluate your album)
+		-AlgorithmManager (singleton class able to manage any algorithm children of baseAlgorithm)
 		-FileWriter (class able to create and write files -> used to write solution sole at the end of an algorithm)
 		
 	The package models.algorithms with classes related to algorithms :
@@ -37,7 +37,7 @@ Packages :
 Folders :
 
 
-The data folder contains json files with all the data related to the album
+The data folder contains json files with all the data relative to the album photo
 
 The results folder contains the different solutions created by your algorithms
 
